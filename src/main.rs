@@ -88,10 +88,6 @@ macro_rules! error {
 }
 
 impl Scanner {
-    fn token(token_type: TokenType) -> io::Result<Token> {
-        Ok(Token { token_type })
-    }
-
     fn scan_token(contents: &mut Chars) -> io::Result<Token> {
         let mut peekable = contents.peekable();
 
@@ -208,10 +204,7 @@ impl Scanner {
                             } else if char.is_ascii_whitespace() {
                                 break;
                             } else {
-                                error = Some(io::Error::new(
-                                    io::ErrorKind::InvalidData,
-                                    format!("Unexpected character: {}", char),
-                                ));
+                                error = Some(raw_error!("Unexpected character: {}", char));
                                 break;
                             }
                         }
@@ -224,20 +217,14 @@ impl Scanner {
                                 if let Ok(result) = parse_result {
                                     token!(Float(result))
                                 } else {
-                                    Err(io::Error::new(
-                                        io::ErrorKind::InvalidData,
-                                        "Failed to parse float",
-                                    ))
+                                    error!("Failed to parse float")
                                 }
                             } else {
                                 let parse_result = string.parse::<i64>();
                                 if let Ok(result) = parse_result {
                                     token!(Int(result))
                                 } else {
-                                    Err(io::Error::new(
-                                        io::ErrorKind::InvalidData,
-                                        "Failed to parse int",
-                                    ))
+                                    error!("Failed to parse int")
                                 }
                             }
                         }
@@ -258,10 +245,7 @@ impl Scanner {
                         token!(Identifier(string))
                     }
 
-                    _ => Err(io::Error::new(
-                        io::ErrorKind::InvalidData,
-                        format!("Unexpected character: {}", char),
-                    )),
+                    _ => error!("Unexpected character: {}", char),
                 }
             }
         } else {
