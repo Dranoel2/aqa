@@ -2,7 +2,7 @@ use std::{io, str::Chars};
 
 #[derive(Debug)]
 pub struct Token {
-    token_type: TokenType,
+    pub token_type: TokenType,
 }
 
 #[derive(Debug, PartialEq)]
@@ -77,6 +77,38 @@ macro_rules! error {
     ($($t:tt)*) => {
         Err(raw_error!($($t)*))
     };
+}
+
+fn resolve_word(word: String) -> io::Result<Token> {
+    match word.as_str() {
+        "CONSTANT" => token!(Constant),
+
+        "DIV" => token!(IntegerDivide),
+        "MOD" => token!(Modulus),
+
+        "AND" => token!(LogicalAnd),
+        "OR" => token!(LogicalOr),
+        "NOT" => token!(LogicalNot),
+
+        "REPEAT" => token!(Repeat),
+        "UNTIL" => token!(Until),
+        "WHILE" => token!(While),
+        "ENDWHILE" => token!(EndWhile),
+
+        "FOR" => token!(For),
+        "TO" => token!(To),
+        "IN" => token!(In),
+        "ENDFOR" => token!(EndFor),
+
+        "IF" => token!(If),
+        "THEN" => token!(Then),
+        "ELSE" => token!(Else),
+        "ENDIF" => token!(EndIf),
+
+        "OUTPUT" => token!(Output),
+
+        _ => token!(Identifier(word)),
+    }
 }
 
 pub fn scan_token(contents: &mut Chars) -> io::Result<Token> {
@@ -233,7 +265,7 @@ pub fn scan_token(contents: &mut Chars) -> io::Result<Token> {
                         }
                     }
 
-                    token!(Identifier(string))
+                    resolve_word(string)
                 }
 
                 _ => error!("Unexpected character: {}", char),

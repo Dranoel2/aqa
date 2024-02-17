@@ -3,7 +3,6 @@ use std::{
     fs::File,
     io::{self, BufReader, Read},
     process,
-    str::Chars,
 };
 
 mod scanner;
