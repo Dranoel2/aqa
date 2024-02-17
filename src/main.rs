@@ -2,12 +2,29 @@ use std::{
     env,
     fs::File,
     io::{self, BufReader, Read},
-    process,
 };
 
 mod scanner;
 
-fn main() -> io::Result<()> {
+pub fn run(contents: String) -> scanner::Result<()> {
+    let mut contents_scanner = scanner::Scanner::new(contents);
+
+    let mut tokens = Vec::new();
+
+    let mut exit = false;
+    while !exit {
+        let token = contents_scanner.scan_token()?;
+        if token.token_type == scanner::TokenType::EOF {
+            exit = true;
+        }
+        tokens.push(token);
+    }
+
+    println!("{:?}", tokens);
+
+    Ok(())
+}
+fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 {
         let path = &args[1];
@@ -16,13 +33,9 @@ fn main() -> io::Result<()> {
         let mut contents = String::new();
         buf_reader.read_to_string(&mut contents)?;
 
-        let tokens = scanner::scan(&mut contents.chars())?;
-
-        println!("{:?}", tokens);
+        run(contents)?;
     } else {
         println!("Usage: aqa-interpreter <file>");
-        process::exit(-1);
     }
-
     Ok(())
 }
