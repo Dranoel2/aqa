@@ -1,8 +1,6 @@
 mod error;
 pub use error::*;
 
-pub type Result<T> = std::result::Result<T, Error>;
-
 #[derive(Debug)]
 pub struct Token {
     pub token_type: TokenType,
@@ -16,6 +14,7 @@ pub enum TokenType {
     String(String),
     Int(i64),
     Float(f64),
+    Bool(bool),
 
     Assign,
     Constant,
@@ -24,7 +23,7 @@ pub enum TokenType {
     Subtract,
     Multiply,
     Divide,
-    IntegerDivide,
+    IntDivide,
     Modulus,
 
     LessThan,
@@ -80,7 +79,7 @@ impl Scanner {
         match word.as_str() {
             "CONSTANT" => TokenType::Constant,
 
-            "DIV" => TokenType::IntegerDivide,
+            "DIV" => TokenType::IntDivide,
             "MOD" => TokenType::Modulus,
 
             "AND" => TokenType::LogicalAnd,
@@ -103,6 +102,9 @@ impl Scanner {
             "ENDIF" => TokenType::EndIf,
 
             "OUTPUT" => TokenType::Output,
+
+            "True" => TokenType::Bool(true),
+            "False" => TokenType::Bool(false),
 
             _ => TokenType::Identifier(word),
         }
