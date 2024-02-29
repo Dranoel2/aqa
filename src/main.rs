@@ -1,19 +1,20 @@
 use std::{
     env,
     fs::File,
-    io::{self, BufReader, Read},
+    io::{BufReader, Read},
 };
 
+mod parser;
 mod scanner;
 
-pub fn run(contents: String) -> scanner::Result<()> {
-    let mut contents_scanner = scanner::Scanner::new(contents);
+pub fn run(contents: String) -> anyhow::Result<()> {
+    let mut scanner = scanner::Scanner::new(contents);
 
     let mut tokens = Vec::new();
 
     let mut exit = false;
     while !exit {
-        let token = contents_scanner.scan_token()?;
+        let token = scanner.scan_token()?;
         if token.token_type == scanner::TokenType::EOF {
             exit = true;
         }
@@ -22,8 +23,15 @@ pub fn run(contents: String) -> scanner::Result<()> {
 
     println!("{:?}", tokens);
 
+    let mut parser = parser::Parser::new(tokens);
+
+    let expression = parser.parse()?;
+
+    println!("{:?}", expression);
+
     Ok(())
 }
+
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 {

@@ -1,14 +1,14 @@
 mod error;
 pub use error::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub line: usize,
     pub column: usize,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenType {
     Identifier(String),
     String(String),
@@ -56,6 +56,9 @@ pub enum TokenType {
 
     LineBreak,
     EOF,
+
+    LeftParen,
+    RightParen,
 }
 
 pub struct Scanner {
@@ -321,6 +324,9 @@ impl Scanner {
 
                         token_value!(Self::resolve_word(string))
                     }
+
+                    '(' => token!(LeftParen),
+                    ')' => token!(RightParen),
 
                     _ => error!(UnexpectedChar(char)),
                 }

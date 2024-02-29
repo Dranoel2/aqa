@@ -3,5 +3,5 @@ equality -> comparison ( ("!=" | "=" ) comparison )* ;
 comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term -> factor ( ( "-" | "+" ) factor )* ;
 factor -> unary ( ( "/" | "*" ) unary )* ;
-unary -> ( "NOT" | "-" ) unary | primary;
+unary -> ("NOT" | "-"  unary) | primary;
 primary -> FLOAT | INT | STRING | BOOL | "(" expression ")" ;
