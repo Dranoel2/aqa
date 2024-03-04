@@ -30,7 +30,7 @@ pub fn run(contents: String) -> anyhow::Result<()> {
     let mut exit = false;
     while !exit {
         let token = scanner.scan_token()?;
-        if token.token_type == scanner::TokenType::EOF {
+        if token.token_type == scanner::TokenType::Eof {
             exit = true;
         }
         tokens.push(token);

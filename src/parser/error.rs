@@ -6,7 +6,6 @@ use crate::{scanner::Token, Position};
 pub enum ErrorType {
     UnexpectedToken(Token),
     ExpectedRightParen,
-    Other(String),
 }
 
 #[derive(Debug)]
@@ -31,7 +30,6 @@ impl fmt::Display for Error {
                 format!("Unexpected token: '{:?}'", token.token_type)
             }
             ErrorType::ExpectedRightParen => String::from("Expected Right Parenthesis"),
-            ErrorType::Other(message) => message.to_owned(),
         };
 
         write!(

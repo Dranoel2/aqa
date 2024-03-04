@@ -54,7 +54,7 @@ pub enum TokenType {
     Output,
 
     LineBreak,
-    EOF,
+    Eof,
 
     LeftParen,
     RightParen,
@@ -188,7 +188,7 @@ impl Scanner {
             starting_column = self.column - 1;
 
             if is_end {
-                token!(EOF)
+                token!(Eof)
             } else {
                 match char {
                     '<' => {
@@ -335,7 +335,7 @@ impl Scanner {
                 }
             }
         } else {
-            token!(EOF)
+            token!(Eof)
         }
     }
 }

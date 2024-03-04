@@ -3,7 +3,6 @@ use std::fmt;
 #[derive(Debug)]
 pub enum ErrorType {
     MismatchedType,
-    Other(String),
 }
 
 #[derive(Debug)]
@@ -21,7 +20,6 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let error_message = match &self.error_type {
             ErrorType::MismatchedType => String::from("Mismatched Type"),
-            ErrorType::Other(message) => message.to_owned(),
         };
 
         write!(f, "{}", error_message)

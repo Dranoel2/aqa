@@ -6,7 +6,6 @@ pub enum ErrorType {
     UnexpectedChar(char),
     FailedToParseFloat,
     FailedToParseInt,
-    Other(String),
 }
 
 #[derive(Debug)]
@@ -19,11 +18,10 @@ pub struct Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let error_message = match &self.error_type {
-            ErrorType::UnexpectedEOF => format!("Unexpected EOF"),
+            ErrorType::UnexpectedEOF => "Unexpected EOF".to_string(),
             ErrorType::UnexpectedChar(char) => format!("Unexpected character: '{}'", char),
-            ErrorType::FailedToParseFloat => format!("failed to parse float"),
-            ErrorType::FailedToParseInt => format!("failed to parse int"),
-            ErrorType::Other(message) => message.to_owned(),
+            ErrorType::FailedToParseFloat => "failed to parse float".to_string(),
+            ErrorType::FailedToParseInt => "failed to parse int".to_string(),
         };
 
         write!(
