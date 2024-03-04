@@ -1,4 +1,7 @@
-use crate::scanner::{Token, TokenType};
+use crate::{
+    scanner::{Token, TokenType},
+    Value,
+};
 
 mod error;
 
@@ -7,11 +10,10 @@ pub use error::*;
 use std::mem;
 
 #[derive(Debug)]
-pub enum Expr {
-    Literal(Token),
-    Bool(bool),
-    Unary(Token, Box<Expr>),
-    Binary(Box<Expr>, Token, Box<Expr>),
+pub enum ExprType {
+    Literal(Value),
+    Unary(Token, Box<ExprType>),
+    Binary(Box<ExprType>, Token, Box<ExprType>),
 }
 
 pub struct Parser {
@@ -24,7 +26,7 @@ impl Parser {
         Self { tokens, index: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Expr> {
+    pub fn parse(&mut self) -> Result<ExprType> {
         self.expression()
     }
 
@@ -60,23 +62,23 @@ impl Parser {
         }
     }
 
-    fn expression(&mut self) -> Result<Expr> {
+    fn expression(&mut self) -> Result<ExprType> {
         self.equality()
     }
 
-    fn equality(&mut self) -> Result<Expr> {
+    fn equality(&mut self) -> Result<ExprType> {
         let mut expr = self.comparison()?;
 
         while self.match_token(TokenType::EqualTo) || self.match_token(TokenType::NotEqualTo) {
             let operator = self.previous();
             let right = self.comparison()?;
-            expr = Expr::Binary(Box::new(expr), operator, Box::new(right));
+            expr = ExprType::Binary(Box::new(expr), operator, Box::new(right));
         }
 
         Ok(expr)
     }
 
-    fn comparison(&mut self) -> Result<Expr> {
+    fn comparison(&mut self) -> Result<ExprType> {
         let mut expr = self.term()?;
 
         while self.match_token(TokenType::LessThan)
@@ -86,65 +88,70 @@ impl Parser {
         {
             let operator = self.previous();
             let right = self.term()?;
-            expr = Expr::Binary(Box::new(expr), operator, Box::new(right));
+            expr = ExprType::Binary(Box::new(expr), operator, Box::new(right));
         }
 
         Ok(expr)
     }
 
-    fn term(&mut self) -> Result<Expr> {
+    fn term(&mut self) -> Result<ExprType> {
         let mut expr = self.factor()?;
 
         while self.match_token(TokenType::Subtract) || self.match_token(TokenType::Add) {
             let operator = self.previous();
             let right = self.factor()?;
-            expr = Expr::Binary(Box::new(expr), operator, Box::new(right));
+            expr = ExprType::Binary(Box::new(expr), operator, Box::new(right));
         }
 
         Ok(expr)
     }
 
-    fn factor(&mut self) -> Result<Expr> {
+    fn factor(&mut self) -> Result<ExprType> {
         let mut expr = self.unary()?;
 
         while self.match_token(TokenType::Multiply) || self.match_token(TokenType::Divide) {
             let operator = self.previous();
             let right = self.unary()?;
-            expr = Expr::Binary(Box::new(expr), operator, Box::new(right));
+            expr = ExprType::Binary(Box::new(expr), operator, Box::new(right));
         }
 
         Ok(expr)
     }
 
-    fn unary(&mut self) -> Result<Expr> {
+    fn unary(&mut self) -> Result<ExprType> {
         if self.match_token(TokenType::LogicalNot) || self.match_token(TokenType::LogicalAnd) {
             let operator = self.previous();
             let right = self.unary()?;
-            Ok(Expr::Unary(operator, Box::new(right)))
+            Ok(ExprType::Unary(operator, Box::new(right)))
         } else {
             self.primary()
         }
     }
 
-    fn primary(&mut self) -> Result<Expr> {
+    fn primary(&mut self) -> Result<ExprType> {
         let expr = match self.peek().token_type {
-            TokenType::Bool(_) | TokenType::Int(_) | TokenType::Float(_) | TokenType::String(_) => {
-                Expr::Literal(self.advance())
+            TokenType::Literal(value) => {
+                self.advance();
+                ExprType::Literal(value)
             }
 
             TokenType::LeftParen => {
                 self.advance();
-                if !self.match_token(TokenType::LeftParen) {
-                    return Err(Error::new(&self.peek(), ErrorType::ExpectedLeftParen));
+                let expr = self.expression()?;
+                if !self.match_token(TokenType::RightParen) {
+                    return Err(Error::new(
+                        self.peek().position,
+                        ErrorType::ExpectedRightParen,
+                    ));
                 } else {
-                    self.expression()?
+                    expr
                 }
             }
 
             _ => {
                 let token = self.peek();
                 return Err(Error::new(
-                    &token,
+                    token.position,
                     ErrorType::UnexpectedToken(token.clone()),
                 ));
             }

@@ -1,26 +1,24 @@
 use std::fmt;
 
-use crate::scanner::Token;
+use crate::{scanner::Token, Position};
 
 #[derive(Debug)]
 pub enum ErrorType {
     UnexpectedToken(Token),
-    ExpectedLeftParen,
+    ExpectedRightParen,
     Other(String),
 }
 
 #[derive(Debug)]
 pub struct Error {
-    pub line: usize,
-    pub column: usize,
+    position: Position,
     pub error_type: ErrorType,
 }
 
 impl Error {
-    pub fn new(token: &Token, error_type: ErrorType) -> Self {
+    pub fn new(position: Position, error_type: ErrorType) -> Self {
         Self {
-            line: token.line,
-            column: token.column,
+            position,
             error_type,
         }
     }
@@ -32,14 +30,14 @@ impl fmt::Display for Error {
             ErrorType::UnexpectedToken(token) => {
                 format!("Unexpected token: '{:?}'", token.token_type)
             }
-            ErrorType::ExpectedLeftParen => String::from("Expected Left Parenthesis"),
+            ErrorType::ExpectedRightParen => String::from("Expected Right Parenthesis"),
             ErrorType::Other(message) => message.to_owned(),
         };
 
         write!(
             f,
             "at line {}, column {}: {}",
-            self.line, self.column, error_message
+            self.position.line, self.position.column, error_message
         )
     }
 }

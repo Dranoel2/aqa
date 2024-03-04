@@ -1,20 +1,19 @@
 mod error;
 pub use error::*;
 
+use crate::{Position, Value};
+
 #[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
-    pub line: usize,
-    pub column: usize,
+    pub position: Position,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum TokenType {
+    Literal(Value),
+
     Identifier(String),
-    String(String),
-    Int(i64),
-    Float(f64),
-    Bool(bool),
 
     Assign,
     Constant,
@@ -106,8 +105,8 @@ impl Scanner {
 
             "OUTPUT" => TokenType::Output,
 
-            "True" => TokenType::Bool(true),
-            "False" => TokenType::Bool(false),
+            "True" => TokenType::Literal(Value::Bool(true)),
+            "False" => TokenType::Literal(Value::Bool(false)),
 
             _ => TokenType::Identifier(word),
         }
@@ -158,8 +157,10 @@ impl Scanner {
             ($token_type:expr) => {
                 Ok(Token {
                     token_type: $token_type,
-                    line: self.line,
-                    column: starting_column,
+                    position: Position {
+                        line: self.line,
+                        column: starting_column,
+                    },
                 })
             };
         }
@@ -245,6 +246,9 @@ impl Scanner {
 
                     '\n' => token!(LineBreak),
 
+                    '(' => token!(LeftParen),
+                    ')' => token!(RightParen),
+
                     '\'' => {
                         let mut string = String::new();
 
@@ -269,7 +273,7 @@ impl Scanner {
                         }
 
                         if is_end {
-                            token!(String(string))
+                            token!(Literal(Value::String(string)))
                         } else {
                             error!(UnexpectedEOF)
                         }
@@ -280,13 +284,15 @@ impl Scanner {
                         string.push(char);
 
                         let mut is_float = false;
-                        while let Some(char) = self.next() {
+                        while let Some(char) = self.peek() {
                             if char.is_numeric() {
+                                self.next();
                                 string.push(char);
                             } else if char == '.' {
+                                self.next();
                                 is_float = true;
                                 string.push(char);
-                            } else if char.is_ascii_whitespace() {
+                            } else if !char.is_alphabetic() {
                                 break;
                             } else {
                                 return error!(UnexpectedChar(char));
@@ -296,14 +302,14 @@ impl Scanner {
                         if is_float {
                             let parse_result = string.parse::<f64>();
                             if let Ok(result) = parse_result {
-                                token!(Float(result))
+                                token!(Literal(Value::Float(result)))
                             } else {
                                 error!(FailedToParseFloat)
                             }
                         } else {
                             let parse_result = string.parse::<i64>();
                             if let Ok(result) = parse_result {
-                                token!(Int(result))
+                                token!(Literal(Value::Int(result)))
                             } else {
                                 error!(FailedToParseInt)
                             }
@@ -324,9 +330,6 @@ impl Scanner {
 
                         token_value!(Self::resolve_word(string))
                     }
-
-                    '(' => token!(LeftParen),
-                    ')' => token!(RightParen),
 
                     _ => error!(UnexpectedChar(char)),
                 }

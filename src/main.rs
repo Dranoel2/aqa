@@ -4,8 +4,23 @@ use std::{
     io::{BufReader, Read},
 };
 
+mod interpreter;
 mod parser;
 mod scanner;
+
+#[derive(Clone, Copy, Debug)]
+pub struct Position {
+    line: usize,
+    column: usize,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+enum Value {
+    Int(i64),
+    Float(f64),
+    Bool(bool),
+    String(String),
+}
 
 pub fn run(contents: String) -> anyhow::Result<()> {
     let mut scanner = scanner::Scanner::new(contents);
@@ -28,6 +43,10 @@ pub fn run(contents: String) -> anyhow::Result<()> {
     let expression = parser.parse()?;
 
     println!("{:?}", expression);
+
+    let value = interpreter::evaluate(expression)?;
+
+    println!("{:?}", value);
 
     Ok(())
 }
