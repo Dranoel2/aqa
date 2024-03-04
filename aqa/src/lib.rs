@@ -1,12 +1,9 @@
-use std::{
-    env,
-    fs::File,
-    io::{BufReader, Read},
-};
-
+mod error;
 mod interpreter;
 mod parser;
 mod scanner;
+
+pub use error::*;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Position {
@@ -15,14 +12,14 @@ pub struct Position {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum Value {
+pub enum Value {
     Int(i64),
     Float(f64),
     Bool(bool),
     String(String),
 }
 
-pub fn run(contents: String) -> anyhow::Result<()> {
+pub fn run(contents: String) -> Result<Value> {
     let mut scanner = scanner::Scanner::new(contents);
 
     let mut tokens = Vec::new();
@@ -48,21 +45,5 @@ pub fn run(contents: String) -> anyhow::Result<()> {
 
     println!("{:?}", value);
 
-    Ok(())
-}
-
-fn main() -> anyhow::Result<()> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() == 2 {
-        let path = &args[1];
-        let file = File::open(path)?;
-        let mut buf_reader = BufReader::new(file);
-        let mut contents = String::new();
-        buf_reader.read_to_string(&mut contents)?;
-
-        run(contents)?;
-    } else {
-        println!("Usage: aqa-interpreter <file>");
-    }
-    Ok(())
+    Ok(value)
 }
